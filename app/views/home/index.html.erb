@@ -1,0 +1,12 @@
+<!doctype html>
+<html>
+  <head>
+    <title>File Vault</title>
+    <%= vite_client_tag %>
+    <%= vite_javascript_tag 'application.jsx' %>
+    <meta name="csrf-token" content="<%= form_authenticity_token %>">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
