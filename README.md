@@ -17,12 +17,12 @@ A minimal file vault system that lets verified users upload large/sensitive file
 
 ## Local setup
 ```bash
-git clone <YOUR_REPO_URL> secure_uploader
-cd secure_uploader
+git clone https://github.com/muhsinfazal/file-vault
+cd file-vault
 bin/setup    # Installs gems, JS packages, prepares DB
 bin/dev      # Runs Rails + Vite
 ```
 Note: Use `chmod +x bin/*` if `bin` doesn’t have executable permission yet.
 
 ## App
-Header over to http://localhost:3000/ to access the app.
+Head over to http://localhost:3000/ to access the app.
