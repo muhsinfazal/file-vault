@@ -1,24 +1,28 @@
-# README
+# File Vault (React + Rails monolith, API-style)
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+A minimal file vault system that lets verified users upload large/sensitive files, list privately, delete, and share publicly via tiny URL. Text-like files are gzipped on upload to save space.
 
-Things you may want to cover:
+## Tech-stack
+- Rails 7, PostgreSQL
+- Devise (email/password)
+- Active Storage (local disk; can swap to S3 in prod)
+- React + Vite
 
-* Ruby version
+## Features
+- Sign up, sign in, sign out.
+- Private list of your files.
+- Upload (title, description, file). Detects MIME via Marcel. If content-type starts with `text/` or is `application/json`, stored as `application/gzip` with `.gz` suffix.
+- Delete a file you own.
+- Public tiny URL (`/p/:token`) to share your file. You can rotate the token.
 
-* System dependencies
+## Local setup
+```bash
+git clone <YOUR_REPO_URL> secure_uploader
+cd secure_uploader
+bin/setup    # Installs gems, JS packages, prepares DB
+bin/dev      # Runs Rails + Vite
+```
+Note: Use `chmod +x bin/*` if `bin` doesn’t have executable permission yet.
 
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+## App
+Header over to http://localhost:3000/ to access the app.

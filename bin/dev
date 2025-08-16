@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+
+# Run Rails + Vite concurrently
+exec foreman start -f Procfile.dev "$@"
