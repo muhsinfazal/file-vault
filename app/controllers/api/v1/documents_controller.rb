@@ -16,7 +16,7 @@ class Api::V1::DocumentsController < ApplicationController
       }
     end
     
-    render json: { documents }
+    render json: { documents: }
   end
 
   def create
@@ -40,11 +40,15 @@ class Api::V1::DocumentsController < ApplicationController
     )
 
     if is_text_like
-      gz_data = StringIO.new
-      Zlib::GzipWriter.wrap(gz_data) { |gz| gz.write uploaded_file.read }
-      gz_data.rewind
+      tempfile = Tempfile.new([uploaded_file.original_filename, ".gz"], binmode: true)
+
+      gz = Zlib::GzipWriter.new(tempfile, Zlib::BEST_COMPRESSION)
+      gz.write uploaded_file.read
+      gz.finish
+      tempfile.rewind
+      
       filename = "#{uploaded_file.original_filename}.gz"
-      doc.file.attach(io: gz_data, filename:, content_type: "application/gzip")
+      doc.file.attach(io: tempfile, filename:, content_type: "application/gzip")
       doc.byte_size = doc.file.blob.byte_size
       doc.compressed = true
     else
