@@ -25,57 +25,24 @@ class Api::V1::DocumentsController < ApplicationController
     unless params[:file].present?
       return render json: { error: "File is required!" }, status: :unprocessable_entity
     end
-
-    title = params[:title].presence || params[:file].original_filename
-    description = params[:description].to_s
-
+  
     uploaded_file = params[:file]
-
-    if uploaded_file.size > MAX_FILE_SIZE
-      render json: { error: "File too large. Maximum allowed size is 1GB." }, status: :unprocessable_entity
-    end
-
+    return render json: { error: "File too large. Maximum allowed size is 1GB." }, status: :unprocessable_entity if uploaded_file.size > MAX_FILE_SIZE
+  
+    title = params[:title].presence || uploaded_file.original_filename
+    description = params[:description].to_s
     detected_type = Marcel::MimeType.for uploaded_file, name: uploaded_file.original_filename
-    is_text_like = detected_type&.start_with?("text/") || %w[
-      application/json application/xml application/x-ndjson
-    ].include?(detected_type)
-
-    doc = current_user.documents.build(
-      title:,
-      description:,
-      content_type: detected_type
-    )
-
-    if is_text_like
-      tempfile = Tempfile.new([uploaded_file.original_filename, ".gz"], binmode: true)
-
-      gz = Zlib::GzipWriter.new(tempfile, Zlib::BEST_COMPRESSION)
-      gz.write uploaded_file.read
-      gz.finish
-      tempfile.rewind
-      
-      filename = "#{uploaded_file.original_filename}.gz"
-      doc.file.attach(io: tempfile, filename:, content_type: "application/gzip")
-      doc.byte_size = doc.file.blob.byte_size
-      doc.compressed = true
-    else
-      doc.file.attach(uploaded_file)
-      doc.byte_size = doc.file.blob.byte_size
-      doc.compressed = false
-    end
-
+  
+    doc = current_user.documents.build(title:, description:, content_type: detected_type)
+  
+    file_info = FileCompressor.compress_if_needed(uploaded_file, detected_type)
+  
+    doc.file.attach(io: file_info[:io], filename: file_info[:filename], content_type: file_info[:content_type])
+    doc.byte_size = doc.file.blob.byte_size
+    doc.compressed = file_info[:compressed]
+  
     if doc.save
-      render json: {
-        document: {
-          id: doc.id,
-          title: doc.title,
-          description: doc.description,
-          content_type: doc.content_type,
-          byte_size: doc.byte_size,
-          compressed: doc.compressed,
-          public_url: public_document_url(doc.public_token)
-        }
-      }, status: :created
+      render json: { document: doc.as_json.merge(public_url: public_document_url(doc.public_token)) }, status: :created
     else
       render json: { errors: doc.errors.full_messages }, status: :unprocessable_entity
     end
