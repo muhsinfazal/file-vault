@@ -1,4 +1,6 @@
 class Api::V1::DocumentsController < ApplicationController
+  MAX_FILE_SIZE = 1.gigabyte
+
   before_action :authenticate_user!
   before_action :load_document!, only: %i[destroy share]
 
@@ -28,6 +30,11 @@ class Api::V1::DocumentsController < ApplicationController
     description = params[:description].to_s
 
     uploaded_file = params[:file]
+
+    if uploaded_file.size > MAX_FILE_SIZE
+      render json: { error: "File too large. Maximum allowed size is 1GB." }, status: :unprocessable_entity
+    end
+
     detected_type = Marcel::MimeType.for uploaded_file, name: uploaded_file.original_filename
     is_text_like = detected_type&.start_with?("text/") || %w[
       application/json application/xml application/x-ndjson
